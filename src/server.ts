@@ -7,15 +7,14 @@ import HeartBeat from "./middlewares/HeartBeat";
 
 const PORT = Number(process.env.PORT || 3000);
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://minder-app-vert.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+}));
 app.use(express.json());
 app.use(HeartBeat);
 app.use(router);
-
-
-app.get("/", (request, response) => {
-  response.send("Hello world!");
-});
 
 app.listen(PORT, () => {
   listRoutes();
