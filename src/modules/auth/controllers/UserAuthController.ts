@@ -5,18 +5,28 @@ import bcrypt from "bcrypt";
 import { generateToken } from "../utils/GenerateToken";
 import { RequestWithUser } from "@/interfaces/RequestWithUser";
 import logger from "@/utils/Loggers/logger";
+import { ZodError } from "zod";
 export class UserAuthController {
   async handle(request: RequestWithUser, response: Response) {
-    const { email, password } = UserAuthBody.parse(request.body);
-
     try {
+      const { email, password } = UserAuthBody.parse(request.body);
+      const { encoded } = request.query;
+      console.log(encoded == 'true')
       const userFound = await prisma.users.findUnique({
         where: { email },
       });
-      if (!userFound || !(await bcrypt.compare(password, userFound.password))) {
-        return response.status(401).json({
-          message: "Email e/ou senha estão incorretos!",
-        });
+      if(!encoded){
+        if (!userFound || !(await bcrypt.compare(password, userFound.password))) {
+          return response.status(401).json({
+            message: "Email and/or password are wrong",
+          });
+        }
+      }else{
+        if (!userFound || password !== userFound.password) {
+          return response.status(401).json({
+            message: "Email and/or password are wrong",
+          });
+        }
       }
       const payload = {
         id: userFound.id,
@@ -32,6 +42,17 @@ export class UserAuthController {
         access_token: token,
         user: payload,
       });
-    } catch (e) {}
+    } catch (e) {
+      if (e instanceof ZodError) {
+        return response.status(401).json({
+          ...e,
+          message: "Invalid data to login",
+        });
+      }
+      return response.status(500).json({
+        ...e,
+        message: "Internal server error",
+      });
+    }
   }
 }

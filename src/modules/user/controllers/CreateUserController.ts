@@ -21,7 +21,7 @@ export class CreateUserController {
       if (e.meta.target?.includes("email")) {
         response.status(400).json({
           ...e,
-          message: "Erro ao criar usuário. Esse email já foi cadastrado!",
+          message: "Esse email já foi cadastrado!",
         });
       } else {
         response.status(400).json({
