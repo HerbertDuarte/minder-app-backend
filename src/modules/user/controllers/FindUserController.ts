@@ -1,15 +1,23 @@
 import prisma from "@/database/prisma";
+import { RequestWithUser } from "@/interfaces/RequestWithUser";
 import { Request, Response } from "express";
 
 export class FindUserController {
-  async handle(request: Request, response: Response) {
+  async handle(request: RequestWithUser, response: Response) {
     try {
-      const { id } = request.params;
-
-      const data = await prisma.users.findUniqueOrThrow({
-        where: { id },
-      });
-      response.json(data);
+      const paramsId = request.params.id;
+      const { id } = request.user;
+      console.log(paramsId, id);
+      if (paramsId === id) {
+        const data = await prisma.users.findUniqueOrThrow({
+          where: { id },
+        });
+        response.json({...data, password : undefined});
+      } else {
+        response.status(401).json({
+          message: "Você não tem permissões para realizar essa consulta!",
+        });
+      }
     } catch (e) {
       if (e.code === "P2025") {
         response.status(404).json({

@@ -10,13 +10,23 @@ export class UserAuthController {
   async handle(request: RequestWithUser, response: Response) {
     try {
       const { email, password } = UserAuthBody.parse(request.body);
+      const { encoded } = request.query;
+      console.log(encoded == 'true')
       const userFound = await prisma.users.findUnique({
         where: { email },
       });
-      if (!userFound || !(await bcrypt.compare(password, userFound.password))) {
-        return response.status(401).json({
-          message: "Email and/or password are wrong",
-        });
+      if(!encoded){
+        if (!userFound || !(await bcrypt.compare(password, userFound.password))) {
+          return response.status(401).json({
+            message: "Email and/or password are wrong",
+          });
+        }
+      }else{
+        if (!userFound || password !== userFound.password) {
+          return response.status(401).json({
+            message: "Email and/or password are wrong",
+          });
+        }
       }
       const payload = {
         id: userFound.id,
@@ -41,8 +51,8 @@ export class UserAuthController {
       }
       return response.status(500).json({
         ...e,
-        message : "Internal server error"
-      })
+        message: "Internal server error",
+      });
     }
   }
 }
