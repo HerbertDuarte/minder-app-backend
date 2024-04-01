@@ -12,6 +12,12 @@ app.use(express.json());
 app.use(HeartBeat);
 app.use(router);
 
+app.get("/", (req, res) => {
+  res.json({
+    message : "Hello! I'm Minder."
+  })
+});
+
 app.listen(PORT, () => {
   listRoutes();
   logger.success(
